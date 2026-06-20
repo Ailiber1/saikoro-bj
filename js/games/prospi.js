@@ -209,7 +209,6 @@
     S.busy = true;
     S.phase = 'revealing';
     refreshSwing();
-    if (global.FX) FX.ev.diceRoll();
 
     var dice = { left: UI.rollDie(), center: UI.rollDie(), right: UI.rollDie() };
     S.lastDice = dice;

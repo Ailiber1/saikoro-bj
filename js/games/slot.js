@@ -247,7 +247,6 @@
 
   function selectPos(i) {
     if (S.phase !== 'select' || S.busy) return;
-    if (global.FX) FX.ev.select();
     S.selected = i;
     document.querySelectorAll('.sl-pos__btn').forEach(function (b) {
       b.classList.toggle('is-active', parseInt(b.getAttribute('data-i'), 10) === i);
@@ -269,7 +268,6 @@
     S.busy = true;
     S.phase = 'rolling';
     refreshRoll();
-    if (global.FX) FX.ev.diceRoll();
 
     var sel = S.selected;
     var pairV = pairValueExcept(S.board, sel);

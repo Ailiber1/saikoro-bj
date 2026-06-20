@@ -229,7 +229,6 @@
 
     S.busy = true;
     refreshControls();
-    if (global.FX) FX.ev.diceRoll();
 
     var dice = UI.rollMany(S.diceCount);
     // 振りアニメ → 確定

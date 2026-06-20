@@ -36,6 +36,9 @@
     var unlock = function () { ensureAudio(); if (ac && ac.state === 'suspended') ac.resume(); };
     document.addEventListener('pointerdown', unlock, { once: false });
 
+    // 全ボタンに最適な効果音を自動付与（種別で出し分け・配線漏れ防止）
+    document.addEventListener('pointerdown', buttonSound, true);
+
     // ボイス一覧（非同期で揃う）
     loadVoices();
     if (global.speechSynthesis) global.speechSynthesis.onvoiceschanged = loadVoices;
@@ -114,7 +117,14 @@
   /* --- 名前付き効果音 --- */
   var SFX = {
     dice: function () { noise(0.18, 0, 0.25); tone(180, 0.08, 'square', 0.02, 0.15); },
-    select: function () { tone(660, 0.06, 'triangle', 0, 0.3); },
+    // UIタップ音（カジノ的な上品なゴールドのコツッ）
+    tap: function () { tone(880, 0.045, 'triangle', 0, 0.22); tone(1320, 0.05, 'sine', 0.012, 0.12); },
+    // 決定・選択（少し明るく確定感）
+    select: function () { tone(660, 0.05, 'triangle', 0, 0.28); tone(990, 0.07, 'triangle', 0.04, 0.2); },
+    // 戻る・閉じる（下降）
+    back: function () { tone(520, 0.05, 'triangle', 0, 0.22); tone(330, 0.08, 'sine', 0.04, 0.18); },
+    // BET増減（コツッと軽い）
+    tick: function () { tone(740, 0.035, 'square', 0, 0.18); },
     coin: function () { tone(988, 0.07, 'square', 0, 0.25); tone(1319, 0.09, 'square', 0.06, 0.22); },
     heart: function () { tone(784, 0.09, 'sine', 0, 0.3); tone(1175, 0.12, 'sine', 0.07, 0.26); },
     win: function () { chord([523, 659, 784], 0.5, 'triangle', 0.28); tone(1047, 0.4, 'triangle', 0.12, 0.22); },
@@ -124,6 +134,20 @@
   };
 
   function play(name) { if (SFX[name]) try { SFX[name](); } catch (e) {} }
+
+  /* --- 全ボタン共通の効果音（種別で最適音を選択） --- */
+  function classify(el) {
+    if (el.matches('#bjRoll, #ppSwing, #slRoll')) return 'dice';                 // 振る＝サイコロ音
+    if (el.matches('.bet-step')) return 'tick';                                  // BET±＝軽いコツッ
+    if (el.matches('.linkback') || /ホームへ|とじる|戻る|閉じる/.test(el.textContent || '')) return 'back'; // 戻る・閉じる
+    if (el.matches('.gamecard, .navbtn, .sl-pos__btn, .sl-reel, .btn--gold, .btn--primary')) return 'select'; // 決定・選択・遷移
+    return 'tap';                                                               // その他すべて
+  }
+  function buttonSound(e) {
+    var el = e.target && e.target.closest && e.target.closest('button, .sl-reel');
+    if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    play(classify(el));
+  }
 
   /* --- ボイス（重厚な魔王調・日本語） --- */
   function speak(text, opts) {
@@ -226,6 +250,7 @@
 
   global.FX = {
     init: init, play: play, speak: speak, flash: flash, burst: burst, character: character,
-    ev: Events, setMute: setMute, isMuted: isMuted
+    ev: Events, setMute: setMute, isMuted: isMuted,
+    _classify: classify // 検証用
   };
 })(window);
