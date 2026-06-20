@@ -234,6 +234,19 @@
     });
   }
 
+  // ステージのダイス演出（3D優先・不可ならCSSダイス）。after()は着地後に呼ぶ
+  function is3D() { return !!(global.Dice3D && Dice3D.available()); }
+  function rollStage(dice, after) {
+    var box = UI.$('#bjDice');
+    if (is3D() && box) {
+      box.classList.add('is-3d');
+      Dice3D.roll(box, dice, after);
+    } else {
+      renderDiceInto('#bjDice', dice, true);
+      UI.sleep(620).then(function () { renderDiceInto('#bjDice', dice, false); after(); });
+    }
+  }
+
   function refreshControls() {
     var roll = UI.$('#bjRoll'), stop = UI.$('#bjStop');
     var betMinus = UI.$('#bjBetMinus'), betPlus = UI.$('#bjBetPlus');
@@ -263,13 +276,10 @@
     refreshControls();
 
     var dice = UI.rollMany(S.diceCount);
-    // 振りアニメ → 確定
-    renderDiceInto('#bjDice', dice, true);
     var statusEl = UI.$('#bjStatus');
-    if (statusEl) statusEl.textContent = '';
+    if (statusEl) { statusEl.textContent = '振っています…'; statusEl.className = 'bj-stage__status'; }
 
-    UI.sleep(620).then(function () {
-      renderDiceInto('#bjDice', dice, false);
+    rollStage(dice, function () {
       var add = dice.reduce(function (a, b) { return a + b; }, 0);
       S.playerSum += add;
       S.playerDice = dice;
@@ -315,8 +325,8 @@
 
   function runMaouTurn() {
     var statusEl = UI.$('#bjStatus');
-    // 手番を魔王へ（中央合計・VSハイライト切替）。ダイスは一旦クリア
-    var diceBox = UI.$('#bjDice'); if (diceBox) diceBox.innerHTML = '';
+    // 手番を魔王へ（中央合計・VSハイライト切替）。3Dダイスは消さず再利用
+    if (!is3D()) { var diceBox = UI.$('#bjDice'); if (diceBox) diceBox.innerHTML = ''; }
     if (statusEl) { statusEl.textContent = '魔王の手番…'; statusEl.className = 'bj-stage__status'; }
     paintSums();
 
@@ -332,11 +342,9 @@
       }
 
       var dice = UI.rollMany(count);
-      renderDiceInto('#bjDice', dice, true);
       if (statusEl) { statusEl.textContent = '魔王が' + count + '個 振る…'; statusEl.className = 'bj-stage__status'; }
 
-      UI.sleep(640).then(function () {
-        renderDiceInto('#bjDice', dice, false);
+      rollStage(dice, function () {
         var add = dice.reduce(function (a, b) { return a + b; }, 0);
         S.maouSum += add;
         S.maouDice = dice;
@@ -461,7 +469,12 @@
     });
   }
 
-  global.GameBJ = { navKey: 'home', bgm: 'bj', render: render };
+  function leave() {
+    var box = UI.$('#bjDice');
+    if (box && global.Dice3D) Dice3D.disposeEl(box);
+  }
+
+  global.GameBJ = { navKey: 'home', bgm: 'bj', render: render, leave: leave };
 
   // 検証用の内部ロジック公開（本番動作には影響しない・テスト専用）
   global.GameBJ._logic = {

@@ -65,8 +65,12 @@
       '</div>';
     v.appendChild(board);
 
-    // 出目表示エリア（振った後に表示）
-    var diceArea = UI.el('div', 'pp-dicearea', '<div class="dice-row" id="ppDice"></div><div class="pp-outcome" id="ppOutcome"></div>');
+    // 投球エリア（魔王投手＋飛んでくるサイコロ）
+    var diceArea = UI.el('div', 'pp-dicearea');
+    diceArea.innerHTML =
+      '<img class="pp-pitcher" id="ppPitcher" src="' + UI.ASSET + 'maou_pitch.webp" alt="">' +
+      '<div class="dice-row" id="ppDice"></div>' +
+      '<div class="pp-outcome" id="ppOutcome"></div>';
     v.appendChild(diceArea);
 
     // 予想入力
@@ -212,21 +216,34 @@
 
     var dice = { left: UI.rollDie(), center: UI.rollDie(), right: UI.rollDie() };
     S.lastDice = dice;
-
-    // 振りアニメ
-    var box = UI.$('#ppDice');
-    box.innerHTML = '';
     var order = ['left', 'center', 'right'];
-    var dieEls = order.map(function () { var d = UI.die(UI.rollDie(), 'md', true); box.appendChild(d); return d; });
+    var vals = [dice.left, dice.center, dice.right];
+
     UI.$('#ppOutcome').textContent = '';
     UI.$('#ppOutcome').className = 'pp-outcome';
 
-    UI.sleep(680).then(function () {
-      // 確定表示
+    // 魔王の投球モーション
+    var pitcher = UI.$('#ppPitcher');
+    if (pitcher) { pitcher.classList.remove('is-pitch'); void pitcher.offsetWidth; pitcher.classList.add('is-pitch'); }
+
+    var box = UI.$('#ppDice');
+    var use3D = !!(global.Dice3D && Dice3D.available());
+
+    if (use3D && box) {
+      box.classList.add('is-3d');
+      // 投球の振りかぶり分だけ遅らせて投げる（魔王のリリースと同期）
+      UI.sleep(300).then(function () {
+        Dice3D.roll(box, vals, function () { resolveAndApply(dice); });
+      });
+    } else {
       box.innerHTML = '';
-      order.forEach(function (k) { var d = UI.die(dice[k], 'md', false); d.classList.add('is-set'); box.appendChild(d); });
-      resolveAndApply(dice);
-    });
+      order.forEach(function () { var d = UI.die(UI.rollDie(), 'md', true); box.appendChild(d); });
+      UI.sleep(680).then(function () {
+        box.innerHTML = '';
+        order.forEach(function (k) { var d = UI.die(dice[k], 'md', false); d.classList.add('is-set'); box.appendChild(d); });
+        resolveAndApply(dice);
+      });
+    }
   }
 
   /* ----------------------------------------------------------
@@ -374,7 +391,12 @@
     UI.$('#ppHelpClose').addEventListener('click', function () { ov.className = 'bj-overlay hidden'; });
   }
 
-  global.GameProspi = { navKey: 'home', bgm: 'prospi', render: render };
+  function leave() {
+    var box = UI.$('#ppDice');
+    if (box && global.Dice3D) Dice3D.disposeEl(box);
+  }
+
+  global.GameProspi = { navKey: 'home', bgm: 'prospi', render: render, leave: leave };
 
   // 検証用ロジック公開（本番動作に影響しない）
   global.GameProspi._logic = { resolve: resolve, applyResult: applyResult, COIN_PER_RUN: COIN_PER_RUN };
