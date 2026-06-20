@@ -1,0 +1,2 @@
+# localStorageキー名（シークレットではない・誤検知）
+js/store.js:generic-api-key:8
