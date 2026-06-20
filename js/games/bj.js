@@ -229,6 +229,7 @@
 
     S.busy = true;
     refreshControls();
+    if (global.FX) FX.ev.diceRoll();
 
     var dice = UI.rollMany(S.diceCount);
     // 振りアニメ → 確定
@@ -377,6 +378,15 @@
   function showResult(result) {
     var ov = UI.$('#bjOverlay');
     if (!ov) return;
+
+    // 演出・効果音
+    if (global.FX) {
+      if (result.outcome === 'bust') FX.ev.bjBust();
+      else if (result.outcome === 'justWin') FX.ev.bjJustWin();
+      else if (result.outcome === 'win') FX.ev.bjWin();
+      else FX.ev.bjLose();
+    }
+
     var win = result.mult > 0;
     var netStr = (result.net >= 0 ? '+' : '') + UI.fmt(result.net);
     ov.className = 'bj-overlay ' + (win ? 'is-win' : 'is-lose');

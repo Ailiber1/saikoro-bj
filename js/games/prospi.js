@@ -209,6 +209,7 @@
     S.busy = true;
     S.phase = 'revealing';
     refreshSwing();
+    if (global.FX) FX.ev.diceRoll();
 
     var dice = { left: UI.rollDie(), center: UI.rollDie(), right: UI.rollDie() };
     S.lastDice = dice;
@@ -293,6 +294,13 @@
     oc.textContent = eff.label + (eff.runs > 0 ? '　+' + eff.runs + '点' : '');
     oc.className = 'pp-outcome is-' + eff.kind + (eff.runs > 0 ? ' has-run' : '');
 
+    // 演出・効果音
+    if (global.FX) {
+      if (eff.kind === 'hr') FX.ev.homerun();
+      else if (eff.kind === 'out') FX.ev.strikeout();
+      else FX.ev.hit();
+    }
+
     S.phase = 'result';
 
     UI.sleep(900).then(function () {
@@ -326,6 +334,7 @@
     var coins = S.runs * COIN_PER_RUN;
     if (coins > 0) Store.addCoins(coins, 'prospi');
     var isBest = Store.reportProspiScore(S.runs);
+    if (global.FX) FX.ev.setClear(S.runs);
 
     var ov = UI.$('#ppOverlay');
     ov.className = 'bj-overlay is-win';

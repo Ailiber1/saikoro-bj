@@ -246,6 +246,7 @@
 
   function selectPos(i) {
     if (S.phase !== 'select' || S.busy) return;
+    if (global.FX) FX.ev.select();
     S.selected = i;
     document.querySelectorAll('.sl-pos__btn').forEach(function (b) {
       b.classList.toggle('is-active', parseInt(b.getAttribute('data-i'), 10) === i);
@@ -267,6 +268,7 @@
     S.busy = true;
     S.phase = 'rolling';
     refreshRoll();
+    if (global.FX) FX.ev.diceRoll();
 
     var sel = S.selected;
     var pairV = pairValueExcept(S.board, sel);
@@ -326,6 +328,12 @@
     if (hearts > 0) Store.addHearts(hearts, 'slot');
     if (triggerKaiten) S.kaiten = KAITEN_SPINS;
 
+    // 演出・効果音
+    if (global.FX) {
+      if (triggerKaiten) FX.ev.kaiten();
+      else if (det.triple) FX.ev.slotWin(hearts);
+    }
+
     if (oc) {
       oc.textContent = msg + (hearts > 0 ? '　❤️+' + hearts : '');
       oc.className = 'sl-outcome ' + (det.triple ? 'is-win' : (det.role ? 'is-role' : 'is-miss'));
@@ -378,6 +386,7 @@
       oc.textContent = maouTriple ? '魔王: ぐははは、揃えさせぬ！' : '魔王: ちっ…次は妨害してくれる';
       oc.className = 'sl-outcome is-maou';
     }
+    if (global.FX) { FX.ev.maouTaunt(); if (maouTriple) FX.speak('揃えさせぬ！', { pitch: 0.3 }); }
     UI.sleep(750).then(done);
   }
 

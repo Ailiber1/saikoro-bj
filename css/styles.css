@@ -604,6 +604,71 @@ img { display: block; max-width: 100%; }
 /* 確変中は盤面を赤く高揚 */
 .view.slot.is-kaiten .sl-board { border-color: var(--crimson-bright); box-shadow: var(--shadow-deep), 0 0 28px var(--crimson-glow); }
 
+/* ============================================================
+   FX 演出レイヤー
+   ============================================================ */
+.fxlayer {
+  position: absolute; inset: 0; z-index: 50;
+  pointer-events: none; overflow: hidden;
+}
+
+/* 画面フラッシュ */
+.fx-flash {
+  position: absolute; inset: 0; opacity: 0.9;
+  transition: opacity 0.55s ease;
+}
+.fx-flash.out { opacity: 0; }
+
+/* 粒子飛散 */
+.fx-particle {
+  position: absolute;
+  will-change: transform, opacity;
+  animation: fxBurst 1.2s cubic-bezier(0.15, 0.6, 0.3, 1) forwards;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+@keyframes fxBurst {
+  0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  18%  { opacity: 1; transform: translate(calc(var(--dx) * 0.5), calc(var(--dy) * 0.5)) scale(1.1); }
+  100% { transform: translate(var(--dx), calc(var(--dy) + 160px)) scale(0.9) rotate(40deg); opacity: 0; }
+}
+
+/* 魔王キャラ ポップイン */
+.fx-char {
+  position: absolute; left: 50%; bottom: 12%;
+  transform: translate(-50%, 30px) scale(0.7);
+  opacity: 0;
+  transition: transform 0.32s cubic-bezier(0.2, 1.5, 0.4, 1), opacity 0.3s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: min(70%, 300px);
+}
+.fx-char.in { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.fx-char.out { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
+.fx-char__img {
+  width: 62%; max-width: 190px; border-radius: 50% 50% 46% 46%;
+  border: 2px solid var(--gold); box-shadow: 0 8px 30px rgba(0,0,0,0.7), 0 0 30px var(--crimson-glow);
+  mix-blend-mode: screen;
+  filter: contrast(1.05) saturate(1.1);
+}
+.fx-char__bubble {
+  font-family: var(--font-jp); font-weight: 700; font-size: 16px; color: var(--text);
+  background: linear-gradient(180deg, rgba(45,21,57,0.96), rgba(20,10,26,0.96));
+  border: 1.5px solid var(--gold); border-radius: 14px; padding: 10px 16px;
+  text-align: center; box-shadow: var(--shadow-deep), 0 0 18px var(--gold-glow);
+  position: relative; letter-spacing: 0.5px; max-width: 100%;
+}
+.fx-char__bubble::after {
+  content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%) rotate(45deg);
+  width: 12px; height: 12px; background: rgba(45,21,57,0.96);
+  border-left: 1.5px solid var(--gold); border-top: 1.5px solid var(--gold);
+}
+
+/* 動きを抑える設定への配慮 */
+@media (prefers-reduced-motion: reduce) {
+  .fx-particle { animation-duration: 0.4s; }
+  .fx-char { transition-duration: 0.15s; }
+  .die.is-rolling, .sl-reel.is-rolling .sl-reel__val { animation: none; }
+}
+
 /* 汎用 */
 .center { text-align: center; }
 .muted { color: var(--text-dim); }

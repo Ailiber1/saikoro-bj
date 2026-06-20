@@ -65,6 +65,16 @@
         '<span style="color:var(--text-mute);font-size:11px">端末ID: ' + Store.deviceId() + '</span>';
       p.appendChild(info);
 
+      if (global.FX) {
+        var soundBtn = UI.el('button', 'btn btn--ghost btn--block', FX.isMuted() ? '🔇 サウンド: OFF' : '🔊 サウンド: ON');
+        soundBtn.addEventListener('click', function () {
+          FX.setMute(!FX.isMuted());
+          soundBtn.textContent = FX.isMuted() ? '🔇 サウンド: OFF' : '🔊 サウンド: ON';
+          if (!FX.isMuted()) FX.play('select');
+        });
+        p.appendChild(soundBtn);
+      }
+
       var resetBtn = UI.el('button', 'btn btn--ghost btn--block', '残高をリセット');
       resetBtn.addEventListener('click', function () {
         if (confirm('コイン・ハートを初期値に戻します。よろしいですか？')) {
@@ -93,6 +103,9 @@
   /* --- 起動 --- */
   function boot() {
     var mount = UI.$('#screen');
+
+    // 演出・効果音の初期化
+    if (global.FX) FX.init();
 
     // 画面登録
     Router.register('home', Home);
