@@ -290,6 +290,7 @@
       S.playerVal = roll.val;
       valEl.textContent = roll.val;
       reel.classList.add('is-set');
+      if (global.FX) { FX.ev.diceLand(); FX.shake('.sl-board'); }
       evaluate();
     });
   }

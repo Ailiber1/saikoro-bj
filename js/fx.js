@@ -130,8 +130,17 @@
     win: function () { chord([523, 659, 784], 0.5, 'triangle', 0.28); tone(1047, 0.4, 'triangle', 0.12, 0.22); },
     bigWin: function () { chord([523, 659, 784, 1047], 0.7, 'triangle', 0.3); sweep(400, 1200, 0.5, 'sawtooth', 0.1, 0.18); },
     lose: function () { sweep(380, 120, 0.5, 'sawtooth', 0, 0.3); tone(110, 0.4, 'sine', 0.1, 0.25); },
-    kaiten: function () { for (var i = 0; i < 6; i++) tone(440 * Math.pow(1.18, i), 0.12, 'square', i * 0.07, 0.22); sweep(300, 1400, 0.7, 'sawtooth', 0, 0.16); }
+    kaiten: function () { for (var i = 0; i < 6; i++) tone(440 * Math.pow(1.18, i), 0.12, 'square', i * 0.07, 0.22); sweep(300, 1400, 0.7, 'sawtooth', 0, 0.16); },
+    land: function () { tone(120, 0.12, 'sine', 0, 0.32); noise(0.08, 0, 0.12); }
   };
+
+  /* --- 着地インパクト（要素を軽く振動） --- */
+  function shake(elOrSel) {
+    var el = typeof elOrSel === 'string' ? document.querySelector(elOrSel) : elOrSel;
+    if (!el) return;
+    el.classList.remove('fx-shake'); void el.offsetWidth; el.classList.add('fx-shake');
+    setTimeout(function () { el.classList.remove('fx-shake'); }, 360);
+  }
 
   function play(name) { if (SFX[name]) try { SFX[name](); } catch (e) {} }
 
@@ -215,26 +224,48 @@
     setTimeout(function () { wrap.remove(); }, dur);
   }
 
+  /* --- 映画的カットイン（見せ場で魔王が大きく登場） --- */
+  function cutin(name, line, opts) {
+    if (!layer) return;
+    opts = opts || {};
+    var dur = opts.duration || 2600;
+    var tone = opts.tone || 'crimson'; // crimson | gold
+    var wrap = document.createElement('div');
+    wrap.className = 'fx-cutin fx-cutin--' + tone;
+    wrap.innerHTML =
+      '<div class="fx-cutin__band"></div>' +
+      '<img class="fx-cutin__img" src="' + ASSET + name + '.webp" alt="">' +
+      (opts.title ? '<div class="fx-cutin__title">' + opts.title + '</div>' : '') +
+      (line ? '<div class="fx-cutin__line">' + line + '</div>' : '');
+    layer.appendChild(wrap);
+    requestAnimationFrame(function () { wrap.classList.add('in'); });
+    if (line) speak(line, opts.voice);
+    setTimeout(function () { wrap.classList.add('out'); }, dur - 420);
+    setTimeout(function () { wrap.remove(); }, dur);
+  }
+
   /* --- 合成イベント（各ゲームから呼ぶ） --- */
   var Events = {
     diceRoll: function () { play('dice'); },
     select: function () { play('select'); },
 
+    diceLand: function () { play('land'); },
+
     // BJ
-    bjWin: function () { play('win'); burst('🪙', 16); },
-    bjJustWin: function () { play('bigWin'); flash('rgba(243,205,107,0.45)', 700); burst('🪙', 26); character('maou_vexed', 'おのれ……ジャストだと！', { duration: 2400 }); },
-    bjBust: function () { play('lose'); flash('rgba(120,10,30,0.55)', 700); character('maou_laugh', 'ぐははは、貴様の負けだ！', { duration: 2400 }); },
-    bjLose: function () { play('lose'); character('maou_laugh', '貴様の負けだ。', { duration: 2200 }); },
+    bjWin: function () { play('win'); burst('🪙', 18); },
+    bjJustWin: function () { play('bigWin'); flash('rgba(243,205,107,0.5)', 800); burst('🪙', 30); cutin('maou_vexed', 'おのれ……ジャストだと！', { title: 'JUST WIN', tone: 'gold', duration: 2600 }); },
+    bjBust: function () { play('lose'); flash('rgba(120,10,30,0.6)', 800); cutin('maou_laugh', 'ぐははは、貴様の負けだ！', { title: 'DOBON', tone: 'crimson', duration: 2600 }); },
+    bjLose: function () { play('lose'); cutin('maou_laugh', '貴様の負けだ。', { tone: 'crimson', duration: 2300 }); },
 
     // プロスピ
-    homerun: function () { play('bigWin'); flash('rgba(243,205,107,0.4)', 700); burst('🪙', 22); character('maou_vexed', '下等な……！', { duration: 2200 }); },
+    homerun: function () { play('bigWin'); flash('rgba(243,205,107,0.45)', 800); burst('🪙', 26); cutin('maou_vexed', '下等な……！', { title: 'HOME RUN', tone: 'gold', duration: 2500 }); },
     hit: function () { play('coin'); },
-    setClear: function (runs) { play('win'); if (runs > 0) burst('🪙', 18); },
+    setClear: function (runs) { play(runs > 0 ? 'bigWin' : 'win'); if (runs > 0) burst('🪙', 18); },
     strikeout: function () { play('lose'); },
 
     // スロット
     slotWin: function (hearts) { play(hearts >= 2 ? 'bigWin' : 'heart'); burst('❤️', 10 + hearts * 4); },
-    kaiten: function () { play('kaiten'); flash('rgba(230,50,82,0.5)', 900); burst('❤️', 18); character('maou_laugh', 'ぐははは、運命は私のものだ！', { duration: 2800 }); },
+    kaiten: function () { play('kaiten'); flash('rgba(230,50,82,0.55)', 1000); burst('❤️', 22); cutin('maou_laugh', 'ぐははは、運命は私のものだ！', { title: '確変', tone: 'crimson', duration: 3000 }); },
     slotMiss: function () { /* 無音（テンポ優先） */ },
     maouTaunt: function () { play('dice'); }
   };
@@ -250,7 +281,7 @@
 
   global.FX = {
     init: init, play: play, speak: speak, flash: flash, burst: burst, character: character,
-    ev: Events, setMute: setMute, isMuted: isMuted,
+    ev: Events, setMute: setMute, isMuted: isMuted, shake: shake, cutin: cutin,
     _classify: classify // 検証用
   };
 })(window);

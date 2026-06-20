@@ -15,19 +15,39 @@
   }
   function fmt(n) { return Number(n).toLocaleString('ja-JP'); }
 
-  /* --- 残高バーの再描画（Storeの変化に追従） --- */
+  /* --- 残高バーの再描画（カウントアップ演出付き） --- */
   function renderWallet(detail) {
     var coinEl = $('#coinVal'), heartEl = $('#heartVal');
     if (coinEl) {
-      coinEl.textContent = fmt(Store.coins());
-      if (detail && detail.type === 'coins' && detail.amount) bump(coinEl);
+      var animC = detail && detail.type === 'coins' && detail.amount;
+      countUp(coinEl, Store.coins(), animC);
+      if (animC) bump(coinEl);
     }
     if (heartEl) {
-      heartEl.textContent = fmt(Store.hearts());
-      if (detail && detail.type === 'hearts' && detail.amount) bump(heartEl);
+      var animH = detail && detail.type === 'hearts' && detail.amount;
+      countUp(heartEl, Store.hearts(), animH);
+      if (animH) bump(heartEl);
     }
   }
   function bump(node) { node.classList.remove('bump'); void node.offsetWidth; node.classList.add('bump'); }
+
+  // 数値を現在表示値から target まで滑らかに増減
+  function countUp(node, target, animate) {
+    if (node._tween) { cancelAnimationFrame(node._tween); node._tween = 0; }
+    var from = parseInt((node.textContent || '0').replace(/[^0-9-]/g, ''), 10);
+    if (!isFinite(from)) from = target;
+    if (!animate || from === target) { node.textContent = fmt(target); return; }
+    var dur = Math.min(700, 200 + Math.abs(target - from) * 0.9);
+    var t0 = null;
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      node.textContent = fmt(Math.round(from + (target - from) * e));
+      if (p < 1) node._tween = requestAnimationFrame(step); else { node.textContent = fmt(target); node._tween = 0; }
+    }
+    node._tween = requestAnimationFrame(step);
+  }
 
   /* --- トースト --- */
   var toastTimer = null;

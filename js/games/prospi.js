@@ -233,7 +233,10 @@
       box.classList.add('is-3d');
       // 投球の振りかぶり分だけ遅らせて投げる（魔王のリリースと同期）
       UI.sleep(300).then(function () {
-        Dice3D.roll(box, vals, function () { resolveAndApply(dice); });
+        Dice3D.roll(box, vals, function () {
+          if (global.FX) { FX.ev.diceLand(); FX.shake('.pp-dicearea'); }
+          resolveAndApply(dice);
+        });
       });
     } else {
       box.innerHTML = '';
@@ -312,7 +315,7 @@
 
     // 演出・効果音
     if (global.FX) {
-      if (eff.kind === 'hr') FX.ev.homerun();
+      if (eff.kind === 'hr') { FX.ev.homerun(); spawnBall(); }
       else if (eff.kind === 'out') FX.ev.strikeout();
       else FX.ev.hit();
     }
@@ -329,6 +332,17 @@
         nextAtBat(false);
       }
     });
+  }
+
+  // ホームラン：ボールが場外へ飛ぶ
+  function spawnBall() {
+    var area = UI.$('.pp-dicearea');
+    if (!area) return;
+    var ball = document.createElement('span');
+    ball.className = 'fx-ball';
+    ball.textContent = '⚾';
+    area.appendChild(ball);
+    setTimeout(function () { if (ball.parentNode) ball.parentNode.removeChild(ball); }, 1150);
   }
 
   function nextAtBat(isRebat) {

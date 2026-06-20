@@ -56,6 +56,35 @@ button { font-family: inherit; color: inherit; cursor: pointer; border: none; ba
 img { display: block; max-width: 100%; }
 
 /* ============================================================
+   起動スプラッシュ
+   ============================================================ */
+.splash {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 38%, #2a1230 0%, #0c0510 70%, #050208 100%);
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+.splash.hide { opacity: 0; visibility: hidden; }
+.splash__inner { display: flex; flex-direction: column; align-items: center; gap: 18px; width: min(78%, 340px); }
+.splash__logo {
+  width: 100%; filter: drop-shadow(0 8px 30px rgba(0,0,0,0.8));
+  mix-blend-mode: screen;
+  animation: splashLogo 1.4s ease both;
+}
+@keyframes splashLogo { 0% { opacity: 0; transform: scale(0.86); } 60% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+.splash__bar {
+  width: 64%; height: 4px; border-radius: 4px; overflow: hidden;
+  background: rgba(243,205,107,0.12); border: 1px solid var(--gold-deep);
+}
+.splash__bar span {
+  display: block; height: 100%; width: 40%;
+  background: linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+  animation: splashBar 1.1s ease-in-out infinite;
+}
+@keyframes splashBar { 0% { transform: translateX(-120%); } 100% { transform: translateX(360%); } }
+.splash__tag { font-family: var(--font-jp); font-size: 12px; letter-spacing: 2px; color: var(--text-dim); }
+
+/* ============================================================
    アプリ枠
    ============================================================ */
 .app {
@@ -723,6 +752,12 @@ img { display: block; max-width: 100%; }
 /* 確変中は盤面を赤く高揚 */
 .view.slot.is-kaiten .sl-board { border-color: var(--crimson-bright); box-shadow: var(--shadow-deep), 0 0 28px var(--crimson-glow); }
 
+/* アンビエント粒子（残り火）。コンテンツより上・上部バー/ナビより下 */
+.ambient {
+  position: absolute; inset: 0; z-index: 28;
+  pointer-events: none; mix-blend-mode: screen;
+}
+
 /* ============================================================
    FX 演出レイヤー
    ============================================================ */
@@ -781,11 +816,76 @@ img { display: block; max-width: 100%; }
   border-left: 1.5px solid var(--gold); border-top: 1.5px solid var(--gold);
 }
 
+/* 着地インパクトの微震動 */
+.fx-shake { animation: fxShake 0.34s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+@keyframes fxShake {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-2px, 1px); }
+  30% { transform: translate(3px, -1px); }
+  45% { transform: translate(-3px, 1px); }
+  60% { transform: translate(2px, 1px); }
+  75% { transform: translate(-1px, 0); }
+}
+
+/* 映画的カットイン */
+.fx-cutin {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0;
+}
+.fx-cutin.in { animation: cutinIn 0.4s ease forwards; }
+.fx-cutin.out { animation: cutinOut 0.42s ease forwards; }
+@keyframes cutinIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cutinOut { from { opacity: 1; } to { opacity: 0; } }
+.fx-cutin__band {
+  position: absolute; left: 0; right: 0; top: 50%; height: 56%; transform: translateY(-50%) skewY(-7deg);
+  background: linear-gradient(90deg, rgba(8,3,12,0) 0%, rgba(8,3,12,0.92) 18%, rgba(8,3,12,0.92) 82%, rgba(8,3,12,0) 100%);
+  border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold);
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+}
+.fx-cutin--crimson .fx-cutin__band { border-color: var(--crimson-bright); box-shadow: 0 0 50px var(--crimson-glow); }
+.fx-cutin--gold .fx-cutin__band { border-color: var(--gold-bright); box-shadow: 0 0 50px var(--gold-glow); }
+.fx-cutin__img {
+  position: relative; width: 70%; max-width: 300px; border-radius: 50% 50% 44% 44%;
+  border: 3px solid var(--gold); mix-blend-mode: screen;
+  filter: contrast(1.08) saturate(1.15) drop-shadow(0 10px 30px rgba(0,0,0,0.8));
+  animation: cutinImg 0.5s cubic-bezier(0.2, 1.5, 0.35, 1) both;
+}
+.fx-cutin--crimson .fx-cutin__img { border-color: var(--crimson-bright); box-shadow: 0 0 40px var(--crimson-glow); }
+@keyframes cutinImg { 0% { transform: translateX(-40px) scale(0.7); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
+.fx-cutin__title {
+  position: relative; margin-top: 10px;
+  font-family: var(--font-display); font-weight: 900; font-size: 34px; letter-spacing: 3px;
+  color: var(--gold-bright); text-shadow: 0 0 18px var(--gold-glow), 0 2px 4px #000;
+  animation: cutinImg 0.5s 0.08s cubic-bezier(0.2, 1.5, 0.35, 1) both;
+}
+.fx-cutin--crimson .fx-cutin__title { color: var(--crimson-bright); text-shadow: 0 0 18px var(--crimson-glow), 0 2px 4px #000; }
+.fx-cutin__line {
+  position: relative; margin-top: 8px; padding: 8px 18px;
+  font-family: var(--font-jp); font-weight: 700; font-size: 16px; color: var(--text);
+  background: rgba(20,10,26,0.8); border: 1.5px solid var(--gold); border-radius: 12px;
+  box-shadow: 0 0 16px var(--gold-glow);
+}
+
+/* ホームラン：ボールが場外へ飛ぶ */
+.fx-ball {
+  position: absolute; left: 50%; top: 58%;
+  font-size: 26px; z-index: 2;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+  animation: fxBall 1.05s cubic-bezier(0.2, 0.5, 0.4, 1) forwards;
+}
+@keyframes fxBall {
+  0% { transform: translate(-50%, 0) scale(1) rotate(0); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(120px, -360px) scale(0.3) rotate(540deg); opacity: 0; }
+}
+
 /* 動きを抑える設定への配慮 */
 @media (prefers-reduced-motion: reduce) {
   .fx-particle { animation-duration: 0.4s; }
-  .fx-char { transition-duration: 0.15s; }
+  .fx-char, .fx-cutin { transition-duration: 0.15s; }
   .die.is-rolling, .sl-reel.is-rolling .sl-reel__val { animation: none; }
+  .fx-shake { animation: none; }
+  .ambient { display: none; }
 }
 
 /* 汎用 */

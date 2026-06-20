@@ -240,7 +240,10 @@
     var box = UI.$('#bjDice');
     if (is3D() && box) {
       box.classList.add('is-3d');
-      Dice3D.roll(box, dice, after);
+      Dice3D.roll(box, dice, function () {
+        if (global.FX) { FX.ev.diceLand(); FX.shake('.bj-stage'); }
+        after();
+      });
     } else {
       renderDiceInto('#bjDice', dice, true);
       UI.sleep(620).then(function () { renderDiceInto('#bjDice', dice, false); after(); });

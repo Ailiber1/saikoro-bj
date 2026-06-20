@@ -108,9 +108,10 @@
   function boot() {
     var mount = UI.$('#screen');
 
-    // 演出・効果音・BGMの初期化
+    // 演出・効果音・BGM・アンビエントの初期化
     if (global.FX) FX.init();
     if (global.BGM) BGM.init();
+    if (global.Ambient) Ambient.init();
 
     // 画面登録
     Router.register('home', Home);
@@ -137,6 +138,13 @@
 
     // 初期画面
     Router.go('home');
+
+    // スプラッシュをフェードアウト（最低表示時間を確保）
+    var splash = document.getElementById('splash');
+    if (splash) {
+      var hide = function () { splash.classList.add('hide'); setTimeout(function () { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 700); };
+      setTimeout(hide, 1500);
+    }
   }
 
   if (document.readyState === 'loading') {

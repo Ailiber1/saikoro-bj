@@ -76,8 +76,27 @@
 
   function dieMaterials() {
     return FACE_VALUE.map(function (v) {
-      return new THREE.MeshStandardMaterial({ map: pipTexture(v), roughness: 0.42, metalness: 0.06 });
+      return new THREE.MeshStandardMaterial({ map: pipTexture(v), roughness: 0.34, metalness: 0.16, envMapIntensity: 0.7 });
     });
+  }
+
+  // 簡易環境マップ（艶・反射用）。明るい帯のある縦グラデを全方位に
+  var _envTex = null;
+  function envTexture() {
+    if (_envTex) return _envTex;
+    var w = 256, h = 128, c = document.createElement('canvas'); c.width = w; c.height = h;
+    var x = c.getContext('2d');
+    var g = x.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#3a2a3e');     // 上：やや明るい紫
+    g.addColorStop(0.42, '#cdb37a');  // 中上：暖色ハイライト帯
+    g.addColorStop(0.5, '#fff0d0');   // ハイライト
+    g.addColorStop(0.6, '#5a2436');   // クリムゾン寄り
+    g.addColorStop(1, '#0c0610');     // 下：暗
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    _envTex = new THREE.CanvasTexture(c);
+    _envTex.mapping = THREE.EquirectangularReflectionMapping;
+    if ('SRGBColorSpace' in THREE) _envTex.colorSpace = THREE.SRGBColorSpace;
+    return _envTex;
   }
 
   // 接地影（黒の放射状グラデ）
@@ -110,6 +129,7 @@
   function build(el, count) {
     var w = el.clientWidth || 240, h = el.clientHeight || 92;
     var scene = new THREE.Scene();
+    scene.environment = envTexture(); // 反射・艶
     var camera = new THREE.PerspectiveCamera(33, w / h, 0.1, 100);
     camera.position.set(0, 0.95, 3.05);
     camera.lookAt(0, 0.02, 0);
@@ -123,6 +143,8 @@
     rim.position.set(-4, 2, -4); scene.add(rim);
 
     var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    if ('outputColorSpace' in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+    if (THREE.ACESFilmicToneMapping) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15; }
     renderer.setPixelRatio(Math.min(global.devicePixelRatio || 1, 2));
     renderer.setSize(w, h, false);
     renderer.domElement.style.width = '100%';
