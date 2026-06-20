@@ -375,7 +375,7 @@
     UI.$('#ppHelpClose').addEventListener('click', function () { ov.className = 'bj-overlay hidden'; });
   }
 
-  global.GameProspi = { navKey: 'home', render: render };
+  global.GameProspi = { navKey: 'home', bgm: 'prospi', render: render };
 
   // 検証用ロジック公開（本番動作に影響しない）
   global.GameProspi._logic = { resolve: resolve, applyResult: applyResult, COIN_PER_RUN: COIN_PER_RUN };

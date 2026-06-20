@@ -242,6 +242,7 @@
     if (n) n.textContent = S.kaiten > 0 ? ('あと' + S.kaiten + '回') : '';
     var view = document.querySelector('.view.slot');
     if (view) view.classList.toggle('is-kaiten', S.kaiten > 0);
+    if (global.BGM) BGM.setKaiten(S.kaiten > 0); // 確変でBGMチェンジ
   }
 
   function selectPos(i) {
@@ -412,7 +413,7 @@
     UI.$('#slHelpClose').addEventListener('click', function () { ov.className = 'bj-overlay hidden'; });
   }
 
-  global.GameSlot = { navKey: 'home', render: render };
+  global.GameSlot = { navKey: 'home', bgm: 'slot', render: render };
 
   // 検証用ロジック公開
   global.GameSlot._logic = {

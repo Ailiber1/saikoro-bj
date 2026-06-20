@@ -220,6 +220,7 @@
     muted = !!v;
     try { global.localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
     if (muted && global.speechSynthesis) global.speechSynthesis.cancel();
+    if (global.BGM) global.BGM.setMute(muted); // BGMも連動
   }
   function isMuted() { return muted; }
 

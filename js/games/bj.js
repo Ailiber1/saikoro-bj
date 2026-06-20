@@ -429,7 +429,7 @@
     });
   }
 
-  global.GameBJ = { navKey: 'home', render: render };
+  global.GameBJ = { navKey: 'home', bgm: 'bj', render: render };
 
   // 検証用の内部ロジック公開（本番動作には影響しない・テスト専用）
   global.GameBJ._logic = {

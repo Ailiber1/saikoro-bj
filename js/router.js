@@ -54,6 +54,9 @@
     updateNav(mod.navKey !== undefined ? mod.navKey : name);
     // 画面トップへ
     mountEl.scrollTop = 0;
+
+    // BGM自動切替（screenモジュールの bgm キー、無ければ home）
+    if (global.BGM) BGM.setScreen(mod.bgm || 'home');
   }
 
   function updateNav(activeKey) {

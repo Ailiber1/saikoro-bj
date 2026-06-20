@@ -13,6 +13,7 @@
 
   var Home = {
     navKey: 'home',
+    bgm: 'home',
     render: function (mount) {
       var v = UI.el('div', 'view');
       v.appendChild(UI.bg('bg_home'));
@@ -45,6 +46,7 @@
   /* --- メニュー画面 --- */
   var Menu = {
     navKey: 'menu',
+    bgm: 'home',
     render: function (mount) {
       var v = UI.el('div', 'view');
       v.appendChild(UI.bg('bg_home'));
@@ -104,8 +106,9 @@
   function boot() {
     var mount = UI.$('#screen');
 
-    // 演出・効果音の初期化
+    // 演出・効果音・BGMの初期化
     if (global.FX) FX.init();
+    if (global.BGM) BGM.init();
 
     // 画面登録
     Router.register('home', Home);
