@@ -50,27 +50,31 @@
       '<div class="screen-title"><button class="linkback" id="bjBack">‹</button> サイコロBJ' +
       '<button class="help-btn" id="bjHelp" aria-label="遊び方">？</button></div>';
 
-    // 目標数バー
-    var targetWrap = UI.el('div', 'bj-target panel panel--gold');
-    targetWrap.innerHTML =
-      '<div class="bj-target__label">目標数</div>' +
-      '<div class="bj-target__nums" id="bjTargetNums"></div>';
-    v.appendChild(targetWrap);
-
-    // 対戦エリア（プレイヤー / 魔王）
-    var arena = UI.el('div', 'bj-arena');
-    arena.innerHTML =
-      '<div class="bj-side bj-side--maou" id="bjMaouSide">' +
-        '<div class="bj-side__head"><span class="bj-side__name">👑 魔王</span><span class="bj-side__sum" id="bjMaouSum">—</span></div>' +
-        '<div class="dice-row bj-dice" id="bjMaouDice"></div>' +
-        '<div class="bj-side__status" id="bjMaouStatus"></div>' +
-      '</div>' +
-      '<div class="bj-side bj-side--player">' +
-        '<div class="bj-side__head"><span class="bj-side__name">🧑 あなた</span><span class="bj-side__sum" id="bjPlayerSum">0</span></div>' +
-        '<div class="dice-row bj-dice" id="bjPlayerDice"></div>' +
-        '<div class="bj-side__status" id="bjPlayerStatus"></div>' +
+    // 目標数ダイヤル（円弧リング＋中央に合計）
+    var dial = UI.el('div', 'bj-dial panel panel--gold');
+    dial.innerHTML =
+      '<div class="bj-dial__ring" id="bjRing"></div>' +
+      '<div class="bj-dial__center">' +
+        '<div class="bj-dial__who" id="bjWho">あなた</div>' +
+        '<div class="bj-dial__sum" id="bjCenterSum">0</div>' +
+        '<div class="bj-dial__target">目標 <b id="bjTargetVal">' + S.target + '</b></div>' +
       '</div>';
-    v.appendChild(arena);
+    v.appendChild(dial);
+
+    // VS対戦ライン
+    var vs = UI.el('div', 'bj-vs');
+    vs.innerHTML =
+      '<div class="bj-vs__side bj-vs__side--player" id="bjVsPlayer"><span class="bj-vs__name">🧑 あなた</span><span class="bj-vs__sum" id="bjPlayerSum">0</span></div>' +
+      '<div class="bj-vs__x">VS</div>' +
+      '<div class="bj-vs__side bj-vs__side--maou" id="bjVsMaou"><span class="bj-vs__name">👑 魔王</span><span class="bj-vs__sum" id="bjMaouSum">—</span></div>';
+    v.appendChild(vs);
+
+    // ダイスステージ（現在振っている側の出目）
+    var stage = UI.el('div', 'bj-stage');
+    stage.innerHTML =
+      '<div class="dice-row bj-dice" id="bjDice"></div>' +
+      '<div class="bj-stage__status" id="bjStatus"></div>';
+    v.appendChild(stage);
 
     // 個数セレクタ
     var counts = UI.el('div', 'bj-counts', '');
@@ -119,7 +123,7 @@
     });
 
     setDiceCount(1);
-    paintTargetNums();
+    paintRing();
     paintSums();
     refreshControls();
   }
@@ -166,17 +170,27 @@
     });
   }
 
-  function paintTargetNums() {
-    var box = UI.$('#bjTargetNums');
-    if (!box) return;
-    var html = '';
-    for (var i = 1; i <= 18; i++) {
-      html += '<span class="bj-num' + (i === S.target ? ' is-target' : '') + '">' + i + '</span>';
+  // 1〜18 を円弧（リング）状に配置。targetを光るジェムで強調
+  function paintRing() {
+    var ring = UI.$('#bjRing');
+    if (!ring) return;
+    ring.innerHTML = '';
+    var N = 18;
+    var arc = 300;                 // 弧の角度（度）。上方を開けて配置
+    var start = -150;              // 開始角（真上=-90基準で左右対称）
+    for (var i = 1; i <= N; i++) {
+      var ang = start + (arc * (i - 1)) / (N - 1); // degrees
+      var span = document.createElement('span');
+      span.className = 'bj-num' + (i === S.target ? ' is-target' : '');
+      span.textContent = i;
+      span.style.transform = 'rotate(' + ang + 'deg) translateY(calc(var(--ring-r) * -1)) rotate(' + (-ang) + 'deg)';
+      ring.appendChild(span);
     }
-    box.innerHTML = html;
+    var tv = UI.$('#bjTargetVal'); if (tv) tv.textContent = S.target;
   }
 
   function paintSums() {
+    // VSライン
     var ps = UI.$('#bjPlayerSum');
     if (ps) {
       ps.textContent = S.playerSum;
@@ -188,6 +202,24 @@
       ms.textContent = (S.phase === 'ready' || S.phase === 'playing') ? '—' : S.maouSum;
       ms.classList.toggle('is-bust', S.maouBust);
       ms.classList.toggle('is-just', !S.maouBust && S.maouSum === S.target && S.phase !== 'playing');
+    }
+    // どちらの手番かでハイライト
+    var vp = UI.$('#bjVsPlayer'), vm = UI.$('#bjVsMaou');
+    var maouTurn = (S.phase === 'maou' || S.phase === 'result');
+    if (vp) vp.classList.toggle('is-active', !maouTurn);
+    if (vm) vm.classList.toggle('is-active', maouTurn);
+
+    // 中央の合計（手番側を表示）
+    var who = UI.$('#bjWho'), cs = UI.$('#bjCenterSum');
+    var showMaou = (S.phase === 'maou' || S.phase === 'result');
+    var sum = showMaou ? S.maouSum : S.playerSum;
+    var bust = showMaou ? S.maouBust : S.playerBust;
+    if (who) who.textContent = showMaou ? '👑 魔王' : '🧑 あなた';
+    if (cs) {
+      cs.textContent = bust ? 'ドボン' : sum;
+      cs.classList.toggle('is-bust', bust);
+      cs.classList.toggle('is-just', !bust && sum === S.target);
+      cs.classList.toggle('is-small', bust);
     }
   }
 
@@ -232,12 +264,12 @@
 
     var dice = UI.rollMany(S.diceCount);
     // 振りアニメ → 確定
-    renderDiceInto('#bjPlayerDice', dice, true);
-    var statusEl = UI.$('#bjPlayerStatus');
+    renderDiceInto('#bjDice', dice, true);
+    var statusEl = UI.$('#bjStatus');
     if (statusEl) statusEl.textContent = '';
 
     UI.sleep(620).then(function () {
-      renderDiceInto('#bjPlayerDice', dice, false);
+      renderDiceInto('#bjDice', dice, false);
       var add = dice.reduce(function (a, b) { return a + b; }, 0);
       S.playerSum += add;
       S.playerDice = dice;
@@ -247,13 +279,13 @@
         // ドボン
         S.playerBust = true;
         paintSums();
-        if (statusEl) { statusEl.textContent = 'ドボン！ (' + add + '加算)'; statusEl.className = 'bj-side__status is-bad'; }
+        if (statusEl) { statusEl.textContent = 'ドボン！ (+' + add + ')'; statusEl.className = 'bj-stage__status is-bad'; }
         S.busy = false;
         UI.sleep(700).then(function () { finish(); });
         return;
       }
 
-      if (statusEl) { statusEl.textContent = '+' + add + (S.playerSum === S.target ? ' ジャスト！' : ''); statusEl.className = 'bj-side__status' + (S.playerSum === S.target ? ' is-just' : ''); }
+      if (statusEl) { statusEl.textContent = '+' + add + (S.playerSum === S.target ? '　ジャスト！' : ''); statusEl.className = 'bj-stage__status' + (S.playerSum === S.target ? ' is-just' : ''); }
       S.busy = false;
       refreshControls();
     });
@@ -282,9 +314,10 @@
   }
 
   function runMaouTurn() {
-    var statusEl = UI.$('#bjMaouStatus');
-    var side = UI.$('#bjMaouSide');
-    if (side) side.classList.add('is-active');
+    var statusEl = UI.$('#bjStatus');
+    // 手番を魔王へ（中央合計・VSハイライト切替）。ダイスは一旦クリア
+    var diceBox = UI.$('#bjDice'); if (diceBox) diceBox.innerHTML = '';
+    if (statusEl) { statusEl.textContent = '魔王の手番…'; statusEl.className = 'bj-stage__status'; }
     paintSums();
 
     function step() {
@@ -299,11 +332,11 @@
       }
 
       var dice = UI.rollMany(count);
-      renderDiceInto('#bjMaouDice', dice, true);
-      if (statusEl) { statusEl.textContent = count + '個 振る…'; statusEl.className = 'bj-side__status'; }
+      renderDiceInto('#bjDice', dice, true);
+      if (statusEl) { statusEl.textContent = '魔王が' + count + '個 振る…'; statusEl.className = 'bj-stage__status'; }
 
       UI.sleep(640).then(function () {
-        renderDiceInto('#bjMaouDice', dice, false);
+        renderDiceInto('#bjDice', dice, false);
         var add = dice.reduce(function (a, b) { return a + b; }, 0);
         S.maouSum += add;
         S.maouDice = dice;
@@ -312,11 +345,11 @@
         if (S.maouSum > S.target) {
           S.maouBust = true;
           paintSums();
-          if (statusEl) { statusEl.textContent = '魔王ドボン！'; statusEl.className = 'bj-side__status is-good'; }
+          if (statusEl) { statusEl.textContent = '魔王ドボン！'; statusEl.className = 'bj-stage__status is-good'; }
           UI.sleep(700).then(function () { finish(); });
           return;
         }
-        if (statusEl) { statusEl.textContent = '+' + add + (S.maouSum === S.target ? ' ジャスト' : ''); statusEl.className = 'bj-side__status'; }
+        if (statusEl) { statusEl.textContent = '魔王 +' + add + (S.maouSum === S.target ? '　ジャスト' : ''); statusEl.className = 'bj-stage__status'; }
         UI.sleep(520).then(step);
       });
     }
