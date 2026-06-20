@@ -29,10 +29,21 @@
     var s = 128;
     var c = document.createElement('canvas'); c.width = c.height = s;
     var x = c.getContext('2d');
+    // 面取り風の暗いフチ
+    x.fillStyle = '#b89a86';
+    roundRect(x, 2, 2, s - 4, s - 4, 26); x.fill();
     // 白い面（わずかにグラデ）
     var g = x.createLinearGradient(0, 0, s, s);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(0.55, '#f2e8e8'); g.addColorStop(1, '#dcc9c9');
-    x.fillStyle = g; roundRect(x, 6, 6, s - 12, s - 12, 22); x.fill();
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#f4ebeb'); g.addColorStop(1, '#dccbcb');
+    x.fillStyle = g; roundRect(x, 9, 9, s - 18, s - 18, 20); x.fill();
+    // 内側の柔らかいハイライト＋陰
+    x.save();
+    roundRect(x, 9, 9, s - 18, s - 18, 20); x.clip();
+    var hg = x.createLinearGradient(0, 9, 0, s - 9);
+    hg.addColorStop(0, 'rgba(255,255,255,0.55)'); hg.addColorStop(0.25, 'rgba(255,255,255,0)');
+    hg.addColorStop(0.8, 'rgba(120,90,90,0)'); hg.addColorStop(1, 'rgba(110,80,80,0.22)');
+    x.fillStyle = hg; x.fillRect(0, 0, s, s);
+    x.restore();
     // ピップ配置
     var P = {
       1: [[.5, .5]],
@@ -45,7 +56,7 @@
     (P[value] || []).forEach(function (p) {
       var px = p[0] * s, py = p[1] * s, r = s * 0.083;
       var rg = x.createRadialGradient(px - r * 0.3, py - r * 0.3, r * 0.2, px, py, r);
-      rg.addColorStop(0, '#d8324f'); rg.addColorStop(1, '#6e0f22');
+      rg.addColorStop(0, '#c8203f'); rg.addColorStop(0.7, '#8d1228'); rg.addColorStop(1, '#52091a');
       x.fillStyle = rg; x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
     });
     var t = new THREE.CanvasTexture(c);
@@ -65,8 +76,21 @@
 
   function dieMaterials() {
     return FACE_VALUE.map(function (v) {
-      return new THREE.MeshStandardMaterial({ map: pipTexture(v), roughness: 0.45, metalness: 0.05 });
+      return new THREE.MeshStandardMaterial({ map: pipTexture(v), roughness: 0.42, metalness: 0.06 });
     });
+  }
+
+  // 接地影（黒の放射状グラデ）
+  var _shadowTex = null;
+  function makeShadowTex() {
+    if (_shadowTex) return _shadowTex;
+    var s = 128, c = document.createElement('canvas'); c.width = c.height = s;
+    var x = c.getContext('2d');
+    var g = x.createRadialGradient(s / 2, s / 2, 2, s / 2, s / 2, s / 2);
+    g.addColorStop(0, 'rgba(0,0,0,0.6)'); g.addColorStop(0.55, 'rgba(0,0,0,0.32)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
+    _shadowTex = new THREE.CanvasTexture(c);
+    return _shadowTex;
   }
 
   /* --- インスタンス管理 --- */
@@ -86,15 +110,17 @@
   function build(el, count) {
     var w = el.clientWidth || 240, h = el.clientHeight || 92;
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
-    camera.position.set(0, 1.05, 4.9);
-    camera.lookAt(0, 0.05, 0);
+    var camera = new THREE.PerspectiveCamera(33, w / h, 0.1, 100);
+    camera.position.set(0, 0.95, 3.05);
+    camera.lookAt(0, 0.02, 0);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-    var key = new THREE.DirectionalLight(0xfff0d8, 1.15);
-    key.position.set(3, 6, 5); scene.add(key);
-    var rim = new THREE.DirectionalLight(0xff6a8a, 0.4);
-    rim.position.set(-4, 2, -3); scene.add(rim);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    var key = new THREE.DirectionalLight(0xfff2dc, 1.25);
+    key.position.set(3, 7, 5); scene.add(key);
+    var fill = new THREE.DirectionalLight(0xffffff, 0.4);
+    fill.position.set(-2, 3, 4); scene.add(fill);
+    var rim = new THREE.DirectionalLight(0xff7a96, 0.55);
+    rim.position.set(-4, 2, -4); scene.add(rim);
 
     var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(global.devicePixelRatio || 1, 2));
@@ -105,19 +131,27 @@
     el.innerHTML = '';
     el.appendChild(renderer.domElement);
 
-    var geo = new THREE.BoxGeometry(1, 1, 1);
-    geo.translate(0, 0, 0);
-    // 角を少し丸めた見た目に（面取り風：スケールで擬似、簡易）
-    var dice = [];
-    var spacing = 1.45;
+    var geo = new THREE.BoxGeometry(1.05, 1.05, 1.05);
+    // 接地影テクスチャ
+    var shadowTex = makeShadowTex();
+    var shadowGeo = new THREE.PlaneGeometry(1.9, 1.9);
+    var dice = [], shadows = [];
+    var spacing = count >= 3 ? 1.5 : 1.65;
     var startX = -spacing * (count - 1) / 2;
     for (var i = 0; i < count; i++) {
       var mesh = new THREE.Mesh(geo, dieMaterials());
-      mesh.position.set(startX + i * spacing, 0, 0);
+      var x = startX + i * spacing;
+      mesh.position.set(x, 0, 0);
       scene.add(mesh);
       dice.push(mesh);
+      // 影
+      var sm = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.45, depthWrite: false }));
+      sm.rotation.x = -Math.PI / 2;
+      sm.position.set(x, -0.56, 0.1);
+      scene.add(sm);
+      shadows.push(sm);
     }
-    var inst = { el: el, renderer: renderer, scene: scene, camera: camera, dice: dice, raf: 0, count: count, geo: geo };
+    var inst = { el: el, renderer: renderer, scene: scene, camera: camera, dice: dice, shadows: shadows, raf: 0, count: count, geo: geo };
     renderOnce(inst);
     return inst;
   }
@@ -144,7 +178,7 @@
       var axis = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
       var turns = 2 + Math.floor(Math.random() * 2); // 2〜3回転
       var delay = i * 70;
-      return { mesh: mesh, startQ: startQ, targetQ: targetQ, axis: axis, turns: turns, delay: delay, baseX: mesh.position.x };
+      return { idx: i, mesh: mesh, startQ: startQ, targetQ: targetQ, axis: axis, turns: turns, delay: delay, baseX: mesh.position.x };
     });
 
     if (inst.raf) cancelAnimationFrame(inst.raf);
@@ -164,8 +198,16 @@
         q.multiply(spin);
         d.mesh.quaternion.copy(q);
         // バウンド＋着地
-        d.mesh.position.y = Math.sin(e * Math.PI) * 0.9 + (1 - e) * 0.2;
+        var yy = Math.sin(e * Math.PI) * 0.9 + (1 - e) * 0.2;
+        d.mesh.position.y = yy;
         d.mesh.position.x = d.baseX;
+        // 影は高さに応じて縮小・薄く
+        if (inst.shadows[d.idx]) {
+          var sh = inst.shadows[d.idx];
+          var k = 1 - Math.min(1, yy * 0.7);
+          sh.scale.set(k, k, k);
+          sh.material.opacity = 0.45 * k;
+        }
       });
       inst.renderer.render(inst.scene, inst.camera);
       if (!allDone) { inst.raf = requestAnimationFrame(frame); }

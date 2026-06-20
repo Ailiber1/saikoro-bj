@@ -6,9 +6,9 @@
 
   /* --- ホーム画面（ハブ） --- */
   var GAMES = [
-    { id: 'bj',     badge: '🎲', title: 'サイコロBJ',     sub: 'DICE BLACKJACK' },
-    { id: 'prospi', badge: '⚾', title: 'サイコロプロスピ', sub: 'DICE BASEBALL' },
-    { id: 'slot',   badge: '🎰', title: 'スロット 555/777', sub: 'DICE SLOT' }
+    { id: 'bj',     badge: '🎲', thumb: 'bg_bj',       title: 'サイコロBJ',     sub: 'DICE BLACKJACK' },
+    { id: 'prospi', badge: '⚾', thumb: 'bg_baseball', title: 'サイコロプロスピ', sub: 'DICE BASEBALL' },
+    { id: 'slot',   badge: '🎰', thumb: 'bg_slot',     title: 'スロット 555/777', sub: 'DICE SLOT' }
   ];
 
   var Home = {
@@ -29,7 +29,9 @@
         var c = UI.el('button', 'gamecard');
         c.type = 'button';
         c.innerHTML =
-          '<div class="gamecard__badge">' + g.badge + '</div>' +
+          '<div class="gamecard__thumb" style="background-image:url(' + UI.ASSET + g.thumb + '.webp)">' +
+            '<span class="gamecard__badge">' + g.badge + '</span>' +
+          '</div>' +
           '<div class="gamecard__body">' +
             '<div class="gamecard__title">' + g.title + '</div>' +
             '<div class="gamecard__sub">' + g.sub + '</div>' +

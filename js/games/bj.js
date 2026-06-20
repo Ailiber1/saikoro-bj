@@ -64,9 +64,9 @@
     // VS対戦ライン
     var vs = UI.el('div', 'bj-vs');
     vs.innerHTML =
-      '<div class="bj-vs__side bj-vs__side--player" id="bjVsPlayer"><span class="bj-vs__name">🧑 あなた</span><span class="bj-vs__sum" id="bjPlayerSum">0</span></div>' +
+      '<div class="bj-vs__side bj-vs__side--player" id="bjVsPlayer"><span class="bj-vs__ava bj-vs__ava--you">🧑</span><span class="bj-vs__name">あなた</span><span class="bj-vs__sum" id="bjPlayerSum">0</span></div>' +
       '<div class="bj-vs__x">VS</div>' +
-      '<div class="bj-vs__side bj-vs__side--maou" id="bjVsMaou"><span class="bj-vs__name">👑 魔王</span><span class="bj-vs__sum" id="bjMaouSum">—</span></div>';
+      '<div class="bj-vs__side bj-vs__side--maou" id="bjVsMaou"><img class="bj-vs__ava bj-vs__ava--maou" src="' + UI.ASSET + 'maou_throne.webp" alt="魔王"><span class="bj-vs__name">魔王</span><span class="bj-vs__sum" id="bjMaouSum">—</span></div>';
     v.appendChild(vs);
 
     // ダイスステージ（現在振っている側の出目）
