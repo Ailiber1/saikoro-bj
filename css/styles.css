@@ -329,6 +329,125 @@ img { display: block; max-width: 100%; }
 
 .dice-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
 
+/* ============================================================
+   画面共通: 戻る/ヘルプボタン
+   ============================================================ */
+.screen-title { position: relative; }
+.linkback {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%; font-size: 22px; color: var(--gold-bright);
+  display: grid; place-items: center; border: 1px solid var(--gold-deep); background: rgba(20,10,26,0.6);
+}
+.linkback:active { transform: translateY(-50%) scale(0.92); }
+.help-btn {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 700; color: var(--gold-bright);
+  display: grid; place-items: center; border: 1px solid var(--gold-deep); background: rgba(20,10,26,0.6);
+}
+
+/* ============================================================
+   サイコロBJ
+   ============================================================ */
+.bj-target { padding: 10px 12px; margin-bottom: 12px; }
+.bj-target__label { text-align: center; font-size: 11px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 6px; }
+.bj-target__nums {
+  display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;
+}
+.bj-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  color: var(--text-mute); background: rgba(255,255,255,0.02); border: 1px solid transparent;
+  font-family: var(--font-display);
+}
+.bj-num.is-target {
+  color: #2a1608; background: radial-gradient(circle at 50% 35%, var(--gold-bright), var(--gold));
+  border-color: var(--gold-bright); box-shadow: 0 0 14px var(--gold-glow);
+  transform: scale(1.18); font-weight: 900;
+}
+
+.bj-arena { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.bj-side {
+  position: relative;
+  border-radius: var(--r-md); padding: 12px;
+  background: linear-gradient(160deg, rgba(39,19,51,0.82), rgba(20,10,26,0.85));
+  border: 1px solid var(--purple-line);
+  min-height: 96px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.bj-side--maou.is-active { border-color: var(--crimson-bright); box-shadow: 0 0 18px var(--crimson-glow); }
+.bj-side__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.bj-side__name { font-size: 13px; color: var(--text-dim); letter-spacing: 1px; }
+.bj-side__sum {
+  font-family: var(--font-display); font-weight: 900; font-size: 28px; color: var(--gold-bright);
+  min-width: 40px; text-align: right; line-height: 1;
+}
+.bj-side__sum.is-bust { color: var(--bad); }
+.bj-side__sum.is-just { color: var(--crimson-bright); text-shadow: 0 0 12px var(--crimson-glow); }
+.bj-dice { min-height: 56px; justify-content: flex-start; }
+.bj-side__status { margin-top: 6px; font-size: 12px; min-height: 16px; color: var(--text-dim); letter-spacing: 0.5px; }
+.bj-side__status.is-bad { color: var(--bad); font-weight: 700; }
+.bj-side__status.is-good { color: var(--ok); font-weight: 700; }
+.bj-side__status.is-just { color: var(--crimson-bright); font-weight: 700; }
+
+/* 個数セレクタ */
+.bj-counts { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; }
+.bj-counts__label { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
+.seg { display: inline-flex; border-radius: 999px; overflow: hidden; border: 1px solid var(--gold-deep); background: rgba(20,10,26,0.6); }
+.seg__btn {
+  width: 44px; height: 36px; font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  color: var(--text-dim); border-right: 1px solid var(--purple-line);
+}
+.seg__btn:last-child { border-right: none; }
+.seg__btn.is-active { color: #2a1608; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
+
+.bj-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+
+/* BETバー */
+.bj-betbar {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 8px; border-radius: var(--r-md);
+  background: rgba(20,10,26,0.55); border: 1px solid var(--purple-line);
+}
+.bj-betbar__label { font-size: 12px; color: var(--text-dim); letter-spacing: 2px; }
+.bj-betbar__val { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--gold-bright); min-width: 64px; text-align: center; }
+.bet-step {
+  width: 34px; height: 34px; border-radius: 50%; font-size: 20px; font-weight: 700; color: var(--gold-bright);
+  display: grid; place-items: center; border: 1px solid var(--gold-deep);
+  background: linear-gradient(180deg, #34163a, #1c0c24);
+}
+.bet-step:active { transform: scale(0.9); }
+.bet-step:disabled { opacity: 0.35; pointer-events: none; }
+
+/* 結果オーバーレイ */
+.bj-overlay {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: rgba(8, 3, 12, 0.86);
+  backdrop-filter: blur(3px);
+  animation: viewIn 0.3s ease both;
+}
+.bj-result {
+  width: 100%; max-width: 340px; text-align: center;
+  border-radius: var(--r-lg); padding: 24px 20px;
+  background: linear-gradient(160deg, rgba(45,21,57,0.96), rgba(20,10,26,0.97));
+  border: 1.5px solid var(--gold); box-shadow: var(--shadow-deep), 0 0 30px var(--gold-glow);
+}
+.bj-overlay.is-win .bj-result { border-color: var(--gold-bright); box-shadow: var(--shadow-deep), 0 0 36px var(--gold-glow); }
+.bj-overlay.is-lose .bj-result { border-color: var(--crimson); box-shadow: var(--shadow-deep), 0 0 30px var(--crimson-glow); }
+.bj-result__label { font-family: var(--font-display); font-weight: 900; font-size: 30px; color: var(--gold-bright); letter-spacing: 1px; margin-bottom: 4px; }
+.bj-overlay.is-lose .bj-result__label { color: var(--crimson-bright); }
+.bj-result__sub { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; }
+.bj-result__detail { font-size: 12px; color: var(--text-mute); margin-bottom: 14px; letter-spacing: 0.5px; }
+.bj-result__coins { font-family: var(--font-display); font-weight: 900; font-size: 26px; margin-bottom: 18px; }
+.bj-result__coins.plus { color: var(--ok); }
+.bj-result__coins.minus { color: var(--bad); }
+.bj-result .btn { margin-bottom: 10px; }
+.bj-result .btn:last-child { margin-bottom: 0; }
+
+/* 遊び方 */
+.bj-help__list { text-align: left; font-size: 13px; line-height: 1.9; color: var(--text); margin: 8px 0 16px; padding-left: 20px; }
+.bj-help__list b { color: var(--gold-bright); }
+
 /* 汎用 */
 .center { text-align: center; }
 .muted { color: var(--text-dim); }
