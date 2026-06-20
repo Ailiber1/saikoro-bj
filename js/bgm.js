@@ -116,6 +116,23 @@
       apply();
     },
 
+    // 一時的にBGM音量を下げる（ボイス・見せ場用）
+    duck: function (ms) {
+      if (muted || !current) return;
+      if (fadeTimer) clearInterval(fadeTimer);
+      try { current.volume = VOL * 0.22; } catch (e) {}
+      if (current._duckTimer) clearTimeout(current._duckTimer);
+      var c = current;
+      c._duckTimer = setTimeout(function () {
+        // なだらかに戻す
+        var steps = 14, i = 0, from = c.volume;
+        var t = setInterval(function () {
+          i++; c.volume = Math.min(VOL, from + (VOL - from) * (i / steps));
+          if (i >= steps) { clearInterval(t); c.volume = VOL; }
+        }, 40);
+      }, ms || 2200);
+    },
+
     setMute: function (v) {
       muted = !!v;
       try { global.localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) {}

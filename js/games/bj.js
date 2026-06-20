@@ -240,6 +240,7 @@
     var box = UI.$('#bjDice');
     if (is3D() && box) {
       box.classList.add('is-3d');
+      if (global.FX) FX.ev.rolling(Dice3D.DURATION);
       Dice3D.roll(box, dice, function () {
         if (global.FX) { FX.ev.diceLand(); FX.shake('.bj-stage'); }
         after();

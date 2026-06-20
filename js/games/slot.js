@@ -210,16 +210,61 @@
     list.innerHTML = html;
   }
 
+  // リールを縦スクロールで finalVal まで回して止める
+  function spinReel(reel, finalVal, cb) {
+    var H = reel.clientHeight || 0;
+    var valEl = reel.querySelector('.sl-reel__val');
+    if (H < 24) { if (valEl) valEl.textContent = finalVal; if (cb) cb(); return; } // レイアウト未確定なら即時
+    var N = 16;
+    var strip = document.createElement('div');
+    strip.className = 'sl-reel__strip';
+    var html = '';
+    for (var i = 0; i < N; i++) {
+      var v = (i === N - 1) ? finalVal : cellRoll(S.mode);
+      html += '<span class="sl-reel__item" style="height:' + H + 'px">' + v + '</span>';
+    }
+    strip.innerHTML = html;
+    if (valEl) valEl.style.visibility = 'hidden';
+    reel.appendChild(strip);
+    reel.classList.add('is-spinning');
+    strip.style.transform = 'translateY(0)';
+    void strip.offsetWidth;
+    strip.style.transition = 'transform 0.78s cubic-bezier(0.12, 0.62, 0.18, 1)';
+    strip.style.transform = 'translateY(-' + ((N - 1) * H) + 'px)';
+    setTimeout(function () {
+      reel.classList.remove('is-spinning');
+      if (valEl) { valEl.textContent = finalVal; valEl.style.visibility = ''; }
+      if (strip.parentNode) strip.parentNode.removeChild(strip);
+      if (cb) cb();
+    }, 800);
+  }
+
   function newBoard() {
     S.board = rollParentBoard(S.mode, S.kaiten);
     S.selected = null;
     S.playerVal = null;
-    S.phase = 'select';
-    paintReels();
     paintKaiten();
+    document.querySelectorAll('.sl-pos__btn').forEach(function (b) { b.classList.remove('is-active'); });
     var oc = UI.$('#slOutcome');
-    if (oc) { oc.textContent = '振り直す位置を選んでね'; oc.className = 'sl-outcome'; }
-    refreshRoll();
+    if (oc) { oc.textContent = '親が振っています…'; oc.className = 'sl-outcome'; }
+
+    // 親のスピン演出（全3リール一斉）
+    S.phase = 'rolling'; S.busy = true; refreshRoll();
+    if (global.FX) FX.ev.rolling(760);
+    var reels = document.querySelectorAll('.sl-reel');
+    var done = 0;
+    if (!reels.length) { S.phase = 'select'; S.busy = false; paintReels(); refreshRoll(); return; }
+    reels.forEach(function (reel, i) {
+      spinReel(reel, S.board[i], function () {
+        if (++done >= 3) {
+          if (global.FX) { FX.ev.diceLand(); FX.shake('.sl-board'); }
+          S.phase = 'select'; S.busy = false;
+          paintReels();
+          if (oc) { oc.textContent = '振り直す位置を選んでね'; oc.className = 'sl-outcome'; }
+          refreshRoll();
+        }
+      });
+    });
   }
 
   function paintReels() {
@@ -273,22 +318,12 @@
     var pairV = pairValueExcept(S.board, sel);
     var roll = playerRoll(S.mode, pairV, S.kaiten);
 
-    // 選択リールの振りアニメ
+    // 選択リールを回して止める
     var reel = document.querySelector('.sl-reel[data-i="' + sel + '"]');
-    reel.classList.add('is-rolling');
-    var valEl = reel.querySelector('.sl-reel__val');
-    var spins = 0;
-    var spinTimer = setInterval(function () {
-      valEl.textContent = cellRoll(S.mode);
-      spins++;
-    }, 90);
-
-    UI.sleep(720).then(function () {
-      clearInterval(spinTimer);
-      reel.classList.remove('is-rolling');
+    if (global.FX) FX.ev.rolling(800);
+    spinReel(reel, roll.val, function () {
       S.board[sel] = roll.val;
       S.playerVal = roll.val;
-      valEl.textContent = roll.val;
       reel.classList.add('is-set');
       if (global.FX) { FX.ev.diceLand(); FX.shake('.sl-board'); }
       evaluate();

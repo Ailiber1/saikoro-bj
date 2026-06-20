@@ -144,6 +144,58 @@
 
   function play(name) { if (SFX[name]) try { SFX[name](); } catch (e) {} }
 
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  /* --- サイコロの転がる音（減速するカラカラ音をスケジュール） --- */
+  function rollSound(ms) {
+    if (muted || !ensureAudio()) return;
+    ms = (ms || 1000) / 1000;
+    var t = 0, n = 0;
+    while (t < ms - 0.04 && n < 26) {
+      var prog = t / ms;
+      // 木質のカチッ＋短いノイズ
+      tone(rnd(150, 320) * (1 - prog * 0.3), 0.028, 'square', t, (0.18 - prog * 0.08));
+      noise(0.018, t, 0.16 - prog * 0.08);
+      t += 0.04 + prog * prog * 0.16; // 進むほど間隔が広がる＝減速感
+      n++;
+    }
+  }
+
+  /* --- 祝祭（噴水＋光線） --- */
+  function celebrate(emoji, count) {
+    if (!layer) return;
+    rays();
+    fountain(emoji || '🪙', count || 26);
+  }
+  function rays() {
+    var r = document.createElement('div');
+    r.className = 'fx-rays';
+    layer.appendChild(r);
+    setTimeout(function () { r.remove(); }, 1100);
+  }
+  function fountain(emoji, count) {
+    for (var i = 0; i < count; i++) {
+      (function () {
+        var p = document.createElement('span');
+        p.className = 'fx-fountain';
+        p.textContent = emoji;
+        p.style.left = (50 + rnd(-8, 8)) + '%';
+        p.style.setProperty('--fx', rnd(-160, 160) + 'px');
+        p.style.setProperty('--fy', rnd(-260, -120) + 'px');
+        p.style.fontSize = rnd(16, 30) + 'px';
+        p.style.animationDelay = rnd(0, 0.25) + 's';
+        layer.appendChild(p);
+        setTimeout(function () { p.remove(); }, 1700);
+      })();
+    }
+  }
+
+  /* --- 触覚フィードバック --- */
+  function vibrate(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {} }
+
+  /* --- BGMダッキング（見せ場・ボイス中はBGMを下げる） --- */
+  function duck(ms) { if (global.BGM && global.BGM.duck) global.BGM.duck(ms || 2200); }
+
   /* --- 全ボタン共通の効果音（種別で最適音を選択） --- */
   function classify(el) {
     if (el.matches('#bjRoll, #ppSwing, #slRoll')) return 'dice';                 // 振る＝サイコロ音
@@ -249,23 +301,24 @@
     diceRoll: function () { play('dice'); },
     select: function () { play('select'); },
 
-    diceLand: function () { play('land'); },
+    rolling: function (ms) { rollSound(ms || 1050); },
+    diceLand: function () { play('land'); vibrate(14); },
 
     // BJ
-    bjWin: function () { play('win'); burst('🪙', 18); },
-    bjJustWin: function () { play('bigWin'); flash('rgba(243,205,107,0.5)', 800); burst('🪙', 30); cutin('maou_vexed', 'おのれ……ジャストだと！', { title: 'JUST WIN', tone: 'gold', duration: 2600 }); },
-    bjBust: function () { play('lose'); flash('rgba(120,10,30,0.6)', 800); cutin('maou_laugh', 'ぐははは、貴様の負けだ！', { title: 'DOBON', tone: 'crimson', duration: 2600 }); },
-    bjLose: function () { play('lose'); cutin('maou_laugh', '貴様の負けだ。', { tone: 'crimson', duration: 2300 }); },
+    bjWin: function () { play('win'); celebrate('🪙', 22); vibrate([20, 40, 20]); },
+    bjJustWin: function () { play('bigWin'); flash('rgba(243,205,107,0.5)', 800); celebrate('🪙', 34); vibrate([30, 50, 30, 50, 30]); duck(); cutin('maou_vexed', 'おのれ……ジャストだと！', { title: 'JUST WIN', tone: 'gold', duration: 2600 }); },
+    bjBust: function () { play('lose'); flash('rgba(120,10,30,0.6)', 800); vibrate([60, 30, 60]); duck(); cutin('maou_laugh', 'ぐははは、貴様の負けだ！', { title: 'DOBON', tone: 'crimson', duration: 2600 }); },
+    bjLose: function () { play('lose'); vibrate(40); duck(); cutin('maou_laugh', '貴様の負けだ。', { tone: 'crimson', duration: 2300 }); },
 
     // プロスピ
-    homerun: function () { play('bigWin'); flash('rgba(243,205,107,0.45)', 800); burst('🪙', 26); cutin('maou_vexed', '下等な……！', { title: 'HOME RUN', tone: 'gold', duration: 2500 }); },
-    hit: function () { play('coin'); },
-    setClear: function (runs) { play(runs > 0 ? 'bigWin' : 'win'); if (runs > 0) burst('🪙', 18); },
-    strikeout: function () { play('lose'); },
+    homerun: function () { play('bigWin'); flash('rgba(243,205,107,0.45)', 800); celebrate('🪙', 30); vibrate([30, 50, 30, 50, 40]); duck(); cutin('maou_vexed', '下等な……！', { title: 'HOME RUN', tone: 'gold', duration: 2500 }); },
+    hit: function () { play('coin'); vibrate(16); },
+    setClear: function (runs) { play(runs > 0 ? 'bigWin' : 'win'); if (runs > 0) celebrate('🪙', 20); },
+    strikeout: function () { play('lose'); vibrate(40); },
 
     // スロット
-    slotWin: function (hearts) { play(hearts >= 2 ? 'bigWin' : 'heart'); burst('❤️', 10 + hearts * 4); },
-    kaiten: function () { play('kaiten'); flash('rgba(230,50,82,0.55)', 1000); burst('❤️', 22); cutin('maou_laugh', 'ぐははは、運命は私のものだ！', { title: '確変', tone: 'crimson', duration: 3000 }); },
+    slotWin: function (hearts) { play(hearts >= 2 ? 'bigWin' : 'heart'); celebrate('❤️', 10 + hearts * 5); vibrate(hearts >= 2 ? [20, 40, 20] : 16); },
+    kaiten: function () { play('kaiten'); flash('rgba(230,50,82,0.55)', 1000); celebrate('❤️', 26); vibrate([40, 60, 40, 60, 60]); duck(1200); cutin('maou_laugh', 'ぐははは、運命は私のものだ！', { title: '確変', tone: 'crimson', duration: 3000 }); },
     slotMiss: function () { /* 無音（テンポ優先） */ },
     maouTaunt: function () { play('dice'); }
   };

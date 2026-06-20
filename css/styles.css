@@ -160,10 +160,12 @@ img { display: block; max-width: 100%; }
 }
 /* 背景画像レイヤー */
 .bglayer {
-  position: absolute; inset: 0;
+  position: absolute; inset: -3%;
   background-size: cover; background-position: center;
   z-index: -2;
+  animation: bgDrift 26s ease-in-out infinite alternate;
 }
+@keyframes bgDrift { 0% { transform: scale(1) translate(0, 0); } 100% { transform: scale(1.07) translate(0, -1.5%); } }
 .bglayer::after { /* 背景を見せつつ可読性を担保するヴィネット（中央を明るく・周辺と下を締める） */
   content: ''; position: absolute; inset: 0;
   background:
@@ -178,7 +180,14 @@ img { display: block; max-width: 100%; }
 /* ============================================================
    ホーム（ハブ）
    ============================================================ */
-.home__logo { width: 78%; max-width: 320px; margin: 4px auto 18px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.7)); }
+.home__logo {
+  width: 78%; max-width: 320px; margin: 4px auto 18px;
+  animation: logoGlow 3.4s ease-in-out infinite;
+}
+@keyframes logoGlow {
+  0%, 100% { filter: drop-shadow(0 6px 18px rgba(0,0,0,0.7)) drop-shadow(0 0 6px rgba(243,205,107,0.0)); }
+  50% { filter: drop-shadow(0 6px 18px rgba(0,0,0,0.7)) drop-shadow(0 0 20px rgba(243,205,107,0.55)); }
+}
 .home__cards { display: flex; flex-direction: column; gap: 14px; }
 
 .gamecard {
@@ -538,11 +547,20 @@ img { display: block; max-width: 100%; }
   animation: viewIn 0.3s ease both;
 }
 .bj-result {
+  position: relative;
   width: 100%; max-width: 340px; text-align: center;
   border-radius: var(--r-lg); padding: 24px 20px;
   background: linear-gradient(160deg, rgba(45,21,57,0.96), rgba(20,10,26,0.97));
   border: 1.5px solid var(--gold); box-shadow: var(--shadow-deep), 0 0 30px var(--gold-glow);
+  animation: resultPop 0.5s cubic-bezier(0.2, 1.4, 0.35, 1) both;
 }
+@keyframes resultPop { 0% { transform: scale(0.82) translateY(8px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+.bj-overlay.is-win .bj-result::before {
+  content: ''; position: absolute; inset: -40px; z-index: -1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(243,205,107,0.25), rgba(243,205,107,0) 70%);
+  animation: resultGlow 2.2s ease-in-out infinite;
+}
+@keyframes resultGlow { 0%, 100% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } }
 .bj-overlay.is-win .bj-result { border-color: var(--gold-bright); box-shadow: var(--shadow-deep), 0 0 36px var(--gold-glow); }
 .bj-overlay.is-lose .bj-result { border-color: var(--crimson); box-shadow: var(--shadow-deep), 0 0 30px var(--crimson-glow); }
 .bj-result__label { font-family: var(--font-display); font-weight: 900; font-size: 30px; color: var(--gold-bright); letter-spacing: 1px; margin-bottom: 4px; }
@@ -594,9 +612,9 @@ img { display: block; max-width: 100%; }
 .pp-dicearea { position: relative; text-align: center; margin-bottom: 14px; min-height: 134px; }
 .pp-dicearea .dice-row { min-height: 56px; margin-bottom: 8px; }
 .pp-pitcher {
-  position: absolute; right: 2px; top: -16px; height: 132px; width: auto;
-  pointer-events: none; z-index: 0; opacity: 0.92;
-  mix-blend-mode: screen; filter: contrast(1.06) saturate(1.1) drop-shadow(0 6px 14px rgba(0,0,0,0.6));
+  position: absolute; right: -6px; top: -22px; height: 156px; width: auto;
+  pointer-events: none; z-index: 0; opacity: 1;
+  mix-blend-mode: screen; filter: brightness(1.18) contrast(1.12) saturate(1.25) drop-shadow(0 6px 16px rgba(0,0,0,0.6));
   transform-origin: 72% 82%;
 }
 .pp-pitcher.is-pitch { animation: ppPitch 0.72s cubic-bezier(0.3, 0.8, 0.3, 1); }
@@ -719,6 +737,15 @@ img { display: block; max-width: 100%; }
 .sl-reel.is-selected .sl-reel__val { color: var(--gold-bright); text-shadow: 0 0 16px var(--gold-glow); }
 .sl-reel.is-rolling .sl-reel__val { animation: reelBlur 0.09s linear infinite; opacity: 0.85; }
 @keyframes reelBlur { 0% { transform: translateY(-4px); } 100% { transform: translateY(4px); } }
+/* 縦スクロールリール */
+.sl-reel__strip { position: absolute; left: 0; top: 0; width: 100%; z-index: 1; will-change: transform; }
+.sl-reel__item {
+  display: grid; place-items: center; width: 100%;
+  font-family: var(--font-display); font-weight: 900; font-size: 46px;
+  color: var(--crimson-bright); text-shadow: 0 0 16px var(--crimson-glow), 0 2px 4px rgba(0,0,0,0.6);
+}
+.sl-reel.is-spinning { box-shadow: inset 0 2px 10px rgba(0,0,0,0.7), 0 0 18px var(--crimson-glow); }
+.sl-reel.is-spinning .sl-reel__strip { filter: blur(0.5px); }
 .sl-reel.is-set .sl-reel__val { animation: dieSet 0.34s cubic-bezier(0.2,1.4,0.4,1) both; }
 .sl-reel.is-hit { animation: reelHit 0.45s ease infinite; border-color: var(--gold-bright); }
 @keyframes reelHit { 0%,100% { box-shadow: 0 0 14px var(--gold-glow); } 50% { box-shadow: 0 0 30px var(--gold-bright); } }
@@ -814,6 +841,41 @@ img { display: block; max-width: 100%; }
   content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%) rotate(45deg);
   width: 12px; height: 12px; background: rgba(45,21,57,0.96);
   border-left: 1.5px solid var(--gold); border-top: 1.5px solid var(--gold);
+}
+
+/* 祝祭：噴水（下から噴き上がる） */
+.fx-fountain {
+  position: absolute; bottom: 18%; left: 50%;
+  will-change: transform, opacity;
+  animation: fxFountain 1.5s cubic-bezier(0.15, 0.6, 0.35, 1) forwards;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+@keyframes fxFountain {
+  0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+  15% { opacity: 1; }
+  55% { transform: translate(calc(-50% + var(--fx)), var(--fy)) scale(1.1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--fx) * 1.3), calc(var(--fy) + 240px)) scale(0.8) rotate(30deg); opacity: 0; }
+}
+/* 祝祭：放射状の光線 */
+.fx-rays {
+  position: absolute; left: 50%; top: 46%; width: 10px; height: 10px; transform: translate(-50%, -50%);
+  background: conic-gradient(from 0deg, rgba(243,205,107,0.0) 0deg, rgba(243,205,107,0.5) 10deg, rgba(243,205,107,0) 20deg,
+    rgba(243,205,107,0) 40deg, rgba(243,205,107,0.45) 50deg, rgba(243,205,107,0) 60deg,
+    rgba(243,205,107,0) 80deg, rgba(243,205,107,0.5) 90deg, rgba(243,205,107,0) 100deg,
+    rgba(243,205,107,0) 120deg, rgba(243,205,107,0.45) 130deg, rgba(243,205,107,0) 140deg,
+    rgba(243,205,107,0) 160deg, rgba(243,205,107,0.5) 170deg, rgba(243,205,107,0) 180deg,
+    rgba(243,205,107,0) 200deg, rgba(243,205,107,0.45) 210deg, rgba(243,205,107,0) 220deg,
+    rgba(243,205,107,0) 240deg, rgba(243,205,107,0.5) 250deg, rgba(243,205,107,0) 260deg,
+    rgba(243,205,107,0) 280deg, rgba(243,205,107,0.45) 290deg, rgba(243,205,107,0) 300deg,
+    rgba(243,205,107,0) 320deg, rgba(243,205,107,0.5) 330deg, rgba(243,205,107,0) 340deg, rgba(243,205,107,0) 360deg);
+  border-radius: 50%;
+  animation: fxRays 1.1s ease-out forwards;
+  mix-blend-mode: screen;
+}
+@keyframes fxRays {
+  0% { width: 10px; height: 10px; opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { width: 620px; height: 620px; opacity: 0; transform: translate(-50%, -50%) rotate(40deg); }
 }
 
 /* 着地インパクトの微震動 */

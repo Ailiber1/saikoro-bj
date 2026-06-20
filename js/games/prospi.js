@@ -233,6 +233,7 @@
       box.classList.add('is-3d');
       // 投球の振りかぶり分だけ遅らせて投げる（魔王のリリースと同期）
       UI.sleep(300).then(function () {
+        if (global.FX) FX.ev.rolling(Dice3D.DURATION);
         Dice3D.roll(box, vals, function () {
           if (global.FX) { FX.ev.diceLand(); FX.shake('.pp-dicearea'); }
           resolveAndApply(dice);
