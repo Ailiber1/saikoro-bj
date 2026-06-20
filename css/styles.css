@@ -448,6 +448,76 @@ img { display: block; max-width: 100%; }
 .bj-help__list { text-align: left; font-size: 13px; line-height: 1.9; color: var(--text); margin: 8px 0 16px; padding-left: 20px; }
 .bj-help__list b { color: var(--gold-bright); }
 
+/* ============================================================
+   サイコロプロスピ
+   ============================================================ */
+.pp-board {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  padding: 12px; margin-bottom: 12px;
+}
+.pp-board__col { text-align: center; }
+.pp-board__lbl { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 5px; }
+.pp-outs { display: flex; gap: 6px; justify-content: center; }
+.pp-out-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1px solid var(--gold-deep); background: rgba(255,255,255,0.04);
+}
+.pp-out-dot.is-on { background: radial-gradient(circle at 40% 35%, var(--crimson-bright), #6e0f22); border-color: var(--crimson-bright); box-shadow: 0 0 8px var(--crimson-glow); }
+.pp-runs { font-family: var(--font-display); font-weight: 900; font-size: 30px; color: var(--gold-bright); line-height: 1; }
+.pp-coin-acc { font-size: 11px; color: var(--ok); margin-top: 3px; min-height: 14px; }
+
+/* 塁ダイヤモンド */
+.pp-diamond { position: relative; width: 86px; height: 86px; }
+.pp-base {
+  position: absolute; width: 18px; height: 18px;
+  background: rgba(255,255,255,0.06); border: 1.5px solid var(--gold-deep);
+  transform: rotate(45deg);
+}
+.pp-base.is-on { background: radial-gradient(circle at 40% 35%, var(--gold-bright), var(--gold)); border-color: var(--gold-bright); box-shadow: 0 0 12px var(--gold-glow); }
+.pp-base--2 { top: 0; left: 50%; margin-left: -9px; }                 /* 2塁(上) */
+.pp-base--1 { top: 50%; right: 0; margin-top: -9px; }                 /* 1塁(右) */
+.pp-base--3 { top: 50%; left: 0; margin-top: -9px; }                  /* 3塁(左) */
+.pp-base--home { bottom: 0; left: 50%; margin-left: -8px; width: 16px; height: 16px; background: rgba(243,205,107,0.25); border-color: var(--gold); }
+
+/* 出目・結果 */
+.pp-dicearea { text-align: center; margin-bottom: 14px; min-height: 92px; }
+.pp-dicearea .dice-row { min-height: 56px; margin-bottom: 8px; }
+.pp-outcome { font-family: var(--font-display); font-weight: 900; font-size: 22px; min-height: 28px; letter-spacing: 1px; color: var(--text-dim); }
+.pp-outcome.is-single { color: var(--ok); }
+.pp-outcome.is-double { color: var(--gold-bright); }
+.pp-outcome.is-hr { color: var(--crimson-bright); text-shadow: 0 0 16px var(--crimson-glow); animation: bump 0.5s ease; }
+.pp-outcome.is-error { color: var(--gold); }
+.pp-outcome.is-out { color: var(--bad); }
+
+/* 予想入力 */
+.pp-predict { margin-bottom: 14px; }
+.pp-predict__hint { text-align: center; font-size: 12px; color: var(--text-dim); margin-bottom: 10px; min-height: 16px; }
+.pp-predict__hint.is-ready { color: var(--ok); font-weight: 700; }
+.pp-positions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.pp-pos {
+  border-radius: var(--r-md); padding: 8px 6px;
+  background: rgba(20,10,26,0.5); border: 1px solid var(--purple-line);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.pp-pos.is-active { border-color: var(--gold); box-shadow: 0 0 12px var(--gold-glow); }
+.pp-pos__head { text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--gold-bright); margin-bottom: 6px; }
+.pp-pos__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.pp-pip {
+  aspect-ratio: 1; border-radius: 7px; font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  color: var(--text-dim); background: rgba(255,255,255,0.03); border: 1px solid var(--purple-line);
+}
+.pp-pip.is-sel { color: #2a1608; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); border-color: var(--gold-bright); }
+.pp-pip:active { transform: scale(0.9); }
+
+.pp-sum { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.pp-sum__lbl { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
+.pp-sum__val { font-family: var(--font-display); font-weight: 900; font-size: 22px; color: var(--gold-bright); min-width: 36px; text-align: center; }
+
+.pp-actions { margin-bottom: 8px; }
+
+.pp-finalruns { font-family: var(--font-display); font-weight: 900; font-size: 38px; color: var(--gold-bright); margin: 8px 0; }
+.pp-best { color: var(--crimson-bright); font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+
 /* 汎用 */
 .center { text-align: center; }
 .muted { color: var(--text-dim); }
